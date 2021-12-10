@@ -1,0 +1,23 @@
+{
+  "name": "blockchain2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "block.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bloom-filters": "^1.3.9",
+    "crypto": "^1.0.1",
+    "crypto-js": "^4.1.1",
+    "elliptic": "^6.5.4",
+    "fully-connected-topology": "^1.1.1",
+    "merkletreejs": "^0.2.26",
+    "peer": "^0.6.1",
+    "peerjs": "^1.3.2",
+    "secp256k1": "^4.0.2"
+  }
+}
