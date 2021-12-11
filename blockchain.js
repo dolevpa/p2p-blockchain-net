@@ -76,7 +76,7 @@ export default class Blockchain {
     }
 
     this.pendingTransactions.push(transaction);
-    console.log(('transaction added: %s', transaction));
+    console.log('transaction added: \n%s', transaction);
   }
 
   /**

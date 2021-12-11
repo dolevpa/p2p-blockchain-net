@@ -1,4 +1,9 @@
 const topology = require('fully-connected-topology')
+// import topology from 'fully-connected-topology'
+
+// import transactions from 'json!./transactions.json'
+const transactions = require('../transactions.json')
+
 const {
     stdin,
     exit,
@@ -21,12 +26,28 @@ log('connecting to peers...')
 
 const myIp = toLocalIp(me)
 const peerIps = getPeerIps(peers)
+let index = 0
 
 //connect to peers
 topology(myIp, peerIps).on('connection', (socket, peerIp) => {
     const peerPort = extractPortFromIp(peerIp)
     log('connected to peer - ', peerPort)
     
+    const sendSingleTransaction = (socket) => {
+        // log(transactions.transactions[index])
+        var buf = Buffer.from(JSON.stringify(transactions.transactions[index]))
+        // log(buf)
+        
+        if (buf.toString().includes("\"fromAddress\":\"alice\"")){
+            log(buf.toString())
+            socket.write(buf)
+        }
+            
+        // socket.write(transactions.transactions[index])
+        index++
+    }
+
+    setInterval(() => sendSingleTransaction(socket), [4000, transactions.transactions]);
     sockets[peerPort] = socket
 
     stdin.on('data', (data) => { //on user input
@@ -36,6 +57,7 @@ topology(myIp, peerIps).on('connection', (socket, peerIp) => {
             exit(0);   
         }
 
+
         const receiverPeer = extractReceiverPeer(message)
         if (sockets[receiverPeer]) { //message to specific peer
             if (peerPort === receiverPeer) { //write only once
@@ -44,11 +66,17 @@ topology(myIp, peerIps).on('connection', (socket, peerIp) => {
             }
         } else { //broadcast message to everyone
             socket.write(formatMessage(message))
+            
+            
+            
+            
         }
     })
-
     //print data when received
     socket.on('data', data => log(data.toString('utf8')))
+
+    
+
 })
 
 
