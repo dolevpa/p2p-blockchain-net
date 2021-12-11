@@ -1,12 +1,12 @@
 // import * as crypto from 'crypto'
-
+const EC = require('elliptic').ec
 const crypto = require('crypto')
 // const {
 //     generateKeyPairSync,
 //     createSign,
 //     createVerify
 //   } = await import('crypto');
-  
+  const ec = new EC('secp256k1');
   const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', {
     namedCurve: 'sect239k1'
   });
@@ -37,20 +37,22 @@ const crypto = require('crypto')
     signTransaction(publicKey, privateKey) {
       // You can only send a transaction from the wallet that is linked to your
       // key. So here we check if the fromAddress matches your publicKey
-      // if (publicKey !== this.fromAddress) {
-      //   throw new Error('You cannot sign transactions for other wallets!');
-      // }
+      if (publicKey !== this.fromAddress) {
+        throw new Error('You cannot sign transactions for other wallets!');
+      }
   
-  
+      const key = ec.keyFromPrivate(privateKey);
       // Calculate the hash of this transaction, sign it with the key
       // and store it inside the transaction obect
-      const sign = crypto.createSign('SHA256');
+      // const sign = crypto.createSign('SHA256');
+      
       const hashTx = this.calculateHash();
-      sign.update(hashTx);
-      sign.end()
-      const sig = sign.sign(privateKey, 'hex')
+      const sign = key.sign(hashTx).toDER("hex");
+      // sign.update(hashTx);
+      // sign.end()
+      // const sig = sign.sign(privateKey, 'hex')
 
-      this.signature = sig;
+      this.signature = sign;
 
     }
   
@@ -74,12 +76,16 @@ const crypto = require('crypto')
       if (!this.signature || this.signature.length === 0) {
         throw new Error('No signature in this transaction');
       }
-      var key = new crypto.KeyObject().from(this.fromAddress)
-      
-      const verify = crypto.createVerify('SHA256');
-      verify.update(this.calculateHash());
-      verify.end();
-      const isVerified = verify.verify(publicKey, this.signature,'hex');
+      // var key = new crypto.KeyObject().from(this.fromAddress)
+      console.log("public key before keyFromPublic: %s", publicKey)
+      var key = ec.keyFromPublic(publicKey, 'hex');
+      // const key = ec.keyFromPrivate(privateKey, 'hex');
+      var isVerified = key.verify(this.calculateHash(), this.signature)
+      // const verify = crypto.createVerify('SHA256');
+      // verify.update(this.calculateHash());
+      // verify.end();
+      // var publicKeyFromAddress = crypto.createPublicKey(this.fromAddress, "pem",);
+      // const isVerified = verify.verify(publicKeyFromAddress, this.signature,'base64');
     //   const publicKey = ec.keyFromPublic(this.fromAddress, 'hex');
       return isVerified
     }

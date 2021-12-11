@@ -1,5 +1,6 @@
 const topology = require('fully-connected-topology')
 const crypto = require('crypto')
+const EC = require('elliptic').ec
 // import topology from 'fully-connected-topology'
 const { Transaction } = require('../transaction.cjs')
 
@@ -16,6 +17,7 @@ const {
 } = console
 const {
     me,
+    name,
     peers
 } = extractPeersAndMyPort()
 const sockets = {}
@@ -29,34 +31,46 @@ log('connecting to peers...')
 const myIp = toLocalIp(me)
 const peerIps = getPeerIps(peers)
 let index = 0
+const ec = new EC('secp256k1')
 
-const getKeyPair = () => {
-    const { privateKey, publicKey } = crypto.generateKeyPairSync("ec", {
-      namedCurve: "secp256k1",
-    });
-    return { privateKey, publicKey };
-  };
 
+const keyPair = ec.genKeyPair()
 //connect to peers
-topology(myIp, peerIps).on('connection', (socket, peerIp) => {
+var t = topology(myIp, peerIps).on('connection', (socket, peerIp) => {
+    // var bobSocket = t.peer("127.0.0.1:4003")
+    // var aliceSocket = t.peer("127.0.0.1:4002")
+    var otherPublicKey;
+    // bobSocket.on()
+    socket.on('connection', () => {
+        socket.write(keyPair.getPublic("hex"))
+       
+    })
+    socket.on('data', data => {
+        otherPublicKey = String.fromCharCode(null, data);
+        log("\n\n OTHER PUBLIC KEY \n ",otherPublicKey)
+        
+    })
+    log("\n\n otherpublickey \n\n ,", otherPublicKey)
     const peerPort = extractPortFromIp(peerIp)
     log('connected to peer - ', peerPort)
 
     const sendSingleTransaction = (socket) => {
         // log(transactions.transactions[index])
 
-        const { privateKey, publicKey } = getKeyPair()
-        if (transactions.transactions[index].fromAddress === 'alice') {
+        
+        //log(name + transactions.transactions[index].fromAddress)
+        if (transactions.transactions[index].fromAddress === name) {
             log(transactions.transactions[index])
-            const tx = new Transaction(transactions.transactions[index].fromAddress, transactions.transactions[index].toAddress, transactions.transactions[index].amount)
-            tx.signTransaction(publicKey, privateKey)
+            const tx = new Transaction(keyPair.getPublic("hex"), otherPublicKey, transactions.transactions[index].amount)
+            tx.signTransaction(keyPair.getPublic("hex"), keyPair.getPrivate("hex"))
             var buf =  Buffer.from(JSON.stringify(tx))
             console.log(tx);
             socket.write(buf)
         }
 
         // socket.write(transactions.transactions[index])
-        index++
+        if(otherPublicKey)
+            index++
     }
 
     setInterval(() => sendSingleTransaction(socket), 4000);
@@ -95,8 +109,9 @@ topology(myIp, peerIps).on('connection', (socket, peerIp) => {
 //extract ports from process arguments, {me: first_port, peers: rest... }
 function extractPeersAndMyPort() {
     return {
-        me: argv[2],
-        peers: argv.slice(3, argv.length)
+        name: argv[2],
+        me: argv[3],
+        peers: argv.slice(4, argv.length)
     }
 }
 

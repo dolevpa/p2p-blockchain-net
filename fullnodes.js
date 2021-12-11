@@ -3,40 +3,48 @@ import topology from "fully-connected-topology";
 import Blockchain from "./blockchain.js";
 import  { Transaction } from "./transaction.cjs";
 import * as crypto from "crypto";
+import EC from "elliptic";
 import { MerkleTree } from "merkletreejs";
 import sha256 from "crypto-js/sha256.js";
+// const EC = require('elliptic').ec
 const hash = crypto.createHash("sha256");
 
 const tree = new MerkleTree([], sha256);
-
-const getKeyPair = () => {
-  const { privateKey, publicKey } = crypto.generateKeyPairSync("ec", {
-    namedCurve: "secp256k1",
-  });
-  return { privateKey, publicKey };
-};
+var Eliptic = EC.ec;
+var ec = new Eliptic('secp256k1');
+const keyPair = ec.genKeyPair();
+// const getKeyPair = () => {
+//   const { privateKey, publicKey } = crypto.generateKeyPairSync("ec", {
+//     namedCurve: "secp256k1",
+//   });
+//   return { privateKey, publicKey };
+// };
 const newCoin = new Blockchain();
 console.log(newCoin.miningReward);
-const { publicKey, privateKey } = getKeyPair();
+// const { publicKey, privateKey } = getKeyPair();
 
-console.log("public : " + publicKey.export({ type: "spki", format: "der" }).toString("hex"));
-console.log("private : " + privateKey.export({ type: "pkcs8", format: "der" }).toString("hex"));
+console.log("public : " + keyPair.getPublic("hex"));
+console.log("private : " + keyPair.getPrivate("hex"));
+// console.log("public : " + publicKey.export({ type: "spki", format: "der" }).toString("hex"));
+// console.log("private : " + privateKey.export({ type: "pkcs8", format: "der" }).toString("hex"));
 
 // ( publicKey, privateKey ) = getKeyPair();
 
-console.log("public : " + publicKey.export({ type: "spki", format: "der" }).toString("hex"));
-console.log("private : " + privateKey.export({ type: "pkcs8", format: "der" }).toString("hex"));
+// console.log("public : " + publicKey.export({ type: "spki", format: "der" }).toString("hex"));
+// console.log("private : " + privateKey.export({ type: "pkcs8", format: "der" }).toString("hex"));
 
-const pk = publicKey.export({ type: "spki", format: "pem" }).toString("hex");
-const tx = new Transaction(pk, "lior", 10);
+const pubK = keyPair.getPublic("hex");
+const privK = keyPair.getPrivate("hex");
+// const pk = publicKey.export({ type: "spki", format: "der" }).toString("base64");
+const tx = new Transaction(pubK, "lior", 10);
 
-tx.signTransaction(publicKey, privateKey);
-newCoin.minePendingTransaction(pk);
+tx.signTransaction(pubK, privK);
+newCoin.minePendingTransaction(pubK);
 
 newCoin.addTransaction(tx);
-console.log(newCoin.getBalanceOfAddress(publicKey));
+console.log(newCoin.getBalanceOfAddress(pubK));
 newCoin.minePendingTransactions("2");
-console.log(newCoin.getBalanceOfAddress(publicKey));
+console.log(newCoin.getBalanceOfAddress(pubK));
 
 tree.addLeaves(newCoin.chain.map((block) => block.hash));
 console.log(tree.toString());
