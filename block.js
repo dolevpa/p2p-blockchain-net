@@ -1,4 +1,4 @@
-import Transaction from './transaction.js'
+import * as Transaction from './transaction.cjs'
 import sha256 from 'crypto-js/sha256.js';
   
 import crypto from 'crypto';

@@ -1,5 +1,5 @@
 import Block from './block.js'
-import Transaction from './transaction.js'
+import { Transaction } from './transaction.cjs'
 
 
 

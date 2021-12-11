@@ -1,25 +1,29 @@
-import * as crypto from 'crypto'
-const {
-    generateKeyPairSync,
-    createSign,
-    createVerify
-  } = await import('crypto');
+// import * as crypto from 'crypto'
+
+const crypto = require('crypto')
+// const {
+//     generateKeyPairSync,
+//     createSign,
+//     createVerify
+//   } = await import('crypto');
   
   const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', {
     namedCurve: 'sect239k1'
   });
   
-export default class Transaction {
+ class Transaction {
     /**
      * @param {string} fromAddress
      * @param {string} toAddress
      * @param {number} amount
      */
-    constructor(fromAddress, toAddress, amount) {
+    constructor(fromAddress, toAddress, amount, signature ) {
       this.fromAddress = fromAddress;
       this.toAddress = toAddress;
       this.amount = amount;
+      this.signature = signature;
       this.timestamp = Date.now(); 
+
     }
   
     /**
@@ -33,14 +37,14 @@ export default class Transaction {
     signTransaction(publicKey, privateKey) {
       // You can only send a transaction from the wallet that is linked to your
       // key. So here we check if the fromAddress matches your publicKey
-      if (publicKey.export({ type: "spki", format: "pem" }).toString("hex") !== this.fromAddress) {
-        throw new Error('You cannot sign transactions for other wallets!');
-      }
+      // if (publicKey !== this.fromAddress) {
+      //   throw new Error('You cannot sign transactions for other wallets!');
+      // }
   
   
       // Calculate the hash of this transaction, sign it with the key
       // and store it inside the transaction obect
-      const sign = createSign('SHA256');
+      const sign = crypto.createSign('SHA256');
       const hashTx = this.calculateHash();
       sign.update(hashTx);
       sign.end()
@@ -60,12 +64,18 @@ export default class Transaction {
       // If the transaction doesn't have a from address we assume it's a
       // mining reward and that it's valid. You could verify this in a
       // different way (special field for instance)
+
+      // var prefix = '-----BEGIN PUBLIC KEY-----\n';
+      // var postfix = '-----END PUBLIC KEY-----\n';
+      // var pemText = prefix + Buffer.from(publicKey).toString('base64')+'\n' + postfix;
+      // console.log(pemText);
       if (this.fromAddress === null) return true;
   
       if (!this.signature || this.signature.length === 0) {
         throw new Error('No signature in this transaction');
       }
-  
+      var key = new crypto.KeyObject().from(this.fromAddress)
+      
       const verify = crypto.createVerify('SHA256');
       verify.update(this.calculateHash());
       verify.end();
@@ -74,3 +84,4 @@ export default class Transaction {
       return isVerified
     }
   }
+  module.exports.Transaction = Transaction

@@ -1,7 +1,7 @@
 // const topology = require('fully-connected-topology')
 import topology from "fully-connected-topology";
 import Blockchain from "./blockchain.js";
-import Transaction from "./transaction.js";
+import  { Transaction } from "./transaction.cjs";
 import * as crypto from "crypto";
 import { MerkleTree } from "merkletreejs";
 import sha256 from "crypto-js/sha256.js";
@@ -17,21 +17,21 @@ const getKeyPair = () => {
 };
 const newCoin = new Blockchain();
 console.log(newCoin.miningReward);
-let { publicKey, privateKey } = getKeyPair();
+const { publicKey, privateKey } = getKeyPair();
 
 console.log("public : " + publicKey.export({ type: "spki", format: "der" }).toString("hex"));
 console.log("private : " + privateKey.export({ type: "pkcs8", format: "der" }).toString("hex"));
 
-( publicKey, privateKey ) = getKeyPair();
+// ( publicKey, privateKey ) = getKeyPair();
 
 console.log("public : " + publicKey.export({ type: "spki", format: "der" }).toString("hex"));
 console.log("private : " + privateKey.export({ type: "pkcs8", format: "der" }).toString("hex"));
 
 const pk = publicKey.export({ type: "spki", format: "pem" }).toString("hex");
-const tx = new Transaction(publicKey, "lior", 10);
+const tx = new Transaction(pk, "lior", 10);
 
 tx.signTransaction(publicKey, privateKey);
-newCoin.minePendingTransaction(publicKey);
+newCoin.minePendingTransaction(pk);
 
 newCoin.addTransaction(tx);
 console.log(newCoin.getBalanceOfAddress(publicKey));
@@ -102,7 +102,8 @@ topology(myIp, peerIps).on("connection", (socket, peerIp) => {
       const tx2 = new Transaction(
         tempTx.fromAddress,
         tempTx.toAddress,
-        tempTx.amount
+        tempTx.amount,
+        tempTx.signature
       );
       log(tx2);
     }

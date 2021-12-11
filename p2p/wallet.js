@@ -1,5 +1,7 @@
 const topology = require('fully-connected-topology')
+const crypto = require('crypto')
 // import topology from 'fully-connected-topology'
+const { Transaction } = require('../transaction.cjs')
 
 // import transactions from 'json!./transactions.json'
 const transactions = require('../transactions.json')
@@ -28,33 +30,43 @@ const myIp = toLocalIp(me)
 const peerIps = getPeerIps(peers)
 let index = 0
 
+const getKeyPair = () => {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync("ec", {
+      namedCurve: "secp256k1",
+    });
+    return { privateKey, publicKey };
+  };
+
 //connect to peers
 topology(myIp, peerIps).on('connection', (socket, peerIp) => {
     const peerPort = extractPortFromIp(peerIp)
     log('connected to peer - ', peerPort)
-    
+
     const sendSingleTransaction = (socket) => {
         // log(transactions.transactions[index])
-        var buf = Buffer.from(JSON.stringify(transactions.transactions[index]))
-        // log(buf)
-        
-        if (buf.toString().includes("\"fromAddress\":\"alice\"")){
-            log(buf.toString())
+
+        const { privateKey, publicKey } = getKeyPair()
+        if (transactions.transactions[index].fromAddress === 'alice') {
+            log(transactions.transactions[index])
+            const tx = new Transaction(transactions.transactions[index].fromAddress, transactions.transactions[index].toAddress, transactions.transactions[index].amount)
+            tx.signTransaction(publicKey, privateKey)
+            var buf =  Buffer.from(JSON.stringify(tx))
+            console.log(tx);
             socket.write(buf)
         }
-            
+
         // socket.write(transactions.transactions[index])
         index++
     }
 
-    setInterval(() => sendSingleTransaction(socket), [4000, transactions.transactions]);
+    setInterval(() => sendSingleTransaction(socket), 4000);
     sockets[peerPort] = socket
 
     stdin.on('data', (data) => { //on user input
         const message = data.toString().trim()
         if (message === 'exit') { //on exit
-            log('Bye bye')     
-            exit(0);   
+            log('Bye bye')
+            exit(0);
         }
 
 
@@ -66,16 +78,16 @@ topology(myIp, peerIps).on('connection', (socket, peerIp) => {
             }
         } else { //broadcast message to everyone
             socket.write(formatMessage(message))
-            
-            
-            
-            
+
+
+
+
         }
     })
     //print data when received
     socket.on('data', data => log(data.toString('utf8')))
 
-    
+
 
 })
 
