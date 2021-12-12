@@ -3,12 +3,14 @@
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": "5"
+            "amount": "5",
+            "tip": "1"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": "4"
+            "amount": "4",
+            "tip": "1"
         },
         {
             "fromAddress": "alice",
@@ -18,137 +20,138 @@
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "3",
+            "tip": "1"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "2"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "1"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "3"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "2"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "4"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "2"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "1"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "2"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "3"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "4"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "2"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "3"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "1"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "5"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "6"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "7"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "8"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "4"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "3"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "2"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "4"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "5"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "3"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "4"
         },
         {
             "fromAddress": "alice",
             "toAddress": "bob",
-            "amount": ""
+            "amount": "2"
         },
         {
             "fromAddress": "bob",
             "toAddress": "alice",
-            "amount": ""
+            "amount": "3"
         }
     ]
 }

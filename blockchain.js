@@ -76,7 +76,7 @@ export default class Blockchain {
     }
 
     this.pendingTransactions.push(transaction);
-    console.log('transaction added: \n%s', transaction);
+    console.log('transaction added:');
   }
 
   /**
@@ -163,29 +163,61 @@ export default class Blockchain {
 
     return true;
   }
+
+  sumAllTips(transactions){
+    var sum = 0
+    for(const tran of transactions)
+      sum+=tran.tip
+    return sum
+  }
+
   minePendingTransaction(miningRewardAddress) {
-    const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward);
+    
+
+    const totalTips = this.sumAllTips(this.pendingTransactions)
+    console.log("TOTAL TIPS ARE:    ", totalTips)
+    const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward + totalTips);
     this.pendingTransactions.push(rewardTx);
     let block = new Block(Date.now(), this.pendingTransactions, this.getLatestBlock().hash);
     block.mineBlock(this.difficulty);
     console.log('block succefully mined');
     this.chain.push(block);
     //this.pendingTransactions = [new Transaction(null, miningRewardAddress, this.miningReward)];
+    this.getBalanceOfAddress(this.pendingTransactions[0].fromAddress)
     this.pendingTransactions = []
+   
+    
+    
   }
+  
+
   getBalanceOfAddress(address) {
-    let balance = 0;
+    let balance = 100;
+    var index = 1
     for (const block of this.chain) {
       for (const trans of block.transactions) {
         if (trans.fromAddress === address) {
-          balance -= trans.amount;
+          console.log(`balance is  ${balance}, amount is ${trans.amount} tip is ${trans.tip} burn is ${this.chain.indexOf(block)}`)
+          balance -= Number(trans.amount) + trans.tip + this.chain.indexOf(block);
+          console.log("new balance is ", balance)
+          
         }
         if (trans.toAddress === address) {
           balance += trans.amount;
         }
       }
+      index++
     }
     return balance;
+  }
+  isTransactionExist(hash) {
+    for(const block of this.chain){
+      const proof = block.tree.getProof(hash)
+      let verified = block.tree.verify(proof, hash, block.tree.getHexRoot())
+      if (verified)
+        return true
+    }
+    return false
   }
 }
 

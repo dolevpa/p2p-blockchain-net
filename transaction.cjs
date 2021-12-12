@@ -1,16 +1,8 @@
 // import * as crypto from 'crypto'
 const EC = require('elliptic').ec
-const crypto = require('crypto')
 const sha256 = require("crypto-js/sha256.js")
-// const {
-//     generateKeyPairSync,
-//     createSign,
-//     createVerify
-//   } = await import('crypto');
-  const ec = new EC('secp256k1');
-  const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', {
-    namedCurve: 'sect239k1'
-  });
+const ec = new EC('secp256k1')
+  
   
  class Transaction {
     /**
@@ -18,13 +10,13 @@ const sha256 = require("crypto-js/sha256.js")
      * @param {string} toAddress
      * @param {number} amount
      */
-    constructor(fromAddress, toAddress, amount, signature ) {
+    constructor(fromAddress, toAddress, amount, signature, timestamp, tip) {
       this.fromAddress = fromAddress;
       this.toAddress = toAddress;
       this.amount = amount;
       this.signature = signature;
-      this.timestamp = Date.now(); 
-
+      this.timestamp = timestamp?timestamp:Date.now();
+      this.tip = tip;
     }
   
     /**
@@ -41,20 +33,10 @@ const sha256 = require("crypto-js/sha256.js")
       if (key.getPublic("hex") !== this.fromAddress) {
         throw new Error('You cannot sign transactions for other wallets!');
       }
-  
-      // const key = ec.keyFromPrivate(privateKey);
-      // Calculate the hash of this transaction, sign it with the key
-      // and store it inside the transaction obect
-      // const sign = crypto.createSign('SHA256');
-      
+      console.log("calculateHash before signing ", this.calculateHash())
       const hashTx = this.calculateHash();
       const sign = key.sign(hashTx).toDER("hex");
-      // sign.update(hashTx);
-      // sign.end()
-      // const sig = sign.sign(privateKey, 'hex')
-
       this.signature = sign;
-
     }
   
     /**
@@ -68,26 +50,18 @@ const sha256 = require("crypto-js/sha256.js")
       // mining reward and that it's valid. You could verify this in a
       // different way (special field for instance)
 
-      // var prefix = '-----BEGIN PUBLIC KEY-----\n';
-      // var postfix = '-----END PUBLIC KEY-----\n';
-      // var pemText = prefix + Buffer.from(publicKey).toString('base64')+'\n' + postfix;
-      // console.log(pemText);
       if (this.fromAddress === null) return true;
   
       if (!this.signature || this.signature.length === 0) {
         throw new Error('No signature in this transaction');
       }
-      // var key = new crypto.KeyObject().from(this.fromAddress)
       console.log("public key before keyFromPublic: %s", publicKey)
       var key = ec.keyFromPublic(publicKey, 'hex');
-      // const key = ec.keyFromPrivate(privateKey, 'hex');
+      console.log("after key ", key.getPublic('hex'))
+      console.log("calculateHash before verify ", this.calculateHash())
       var isVerified = key.verify(this.calculateHash(), this.signature)
-      // const verify = crypto.createVerify('SHA256');
-      // verify.update(this.calculateHash());
-      // verify.end();
-      // var publicKeyFromAddress = crypto.createPublicKey(this.fromAddress, "pem",);
-      // const isVerified = verify.verify(publicKeyFromAddress, this.signature,'base64');
-    //   const publicKey = ec.keyFromPublic(this.fromAddress, 'hex');
+      console.log("after isVerified ", isVerified)
+      
       return isVerified
     }
   }

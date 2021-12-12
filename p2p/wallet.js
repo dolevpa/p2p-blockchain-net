@@ -47,6 +47,7 @@ var otherPublicKey;
 let stageZero = false;
 // const keyPair = ec.genKeyPair();
 //connect to peers
+var first = true;
 var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
   const peerPort = extractPortFromIp(peerIp);
   log("connected to peer - ", peerPort);
@@ -62,10 +63,14 @@ var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
       const tx = new Transaction(
         pkMap.get(name),
         pkMap.get(name === "alice" ? "bob" : "alice"),
-        transactions.transactions[index].amount
+        transactions.transactions[index].amount,
+        undefined,
+        undefined,
+        transactions.transactions[index].tip ? 1 : 0
       );
-      log("SEE MEEEEE" , tx.fromAddress)
-      log("SEE MEEEE2" , key.getPublic("hex"))
+      log("TX   ", tx);
+      log("SEE MEEEEE", tx.fromAddress);
+      log("SEE MEEEE2", key.getPublic("hex"));
       tx.signTransaction(key);
       var buf = Buffer.from(JSON.stringify(tx));
       console.log(tx);
@@ -75,7 +80,13 @@ var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
     index++;
   };
 
-  setInterval(() => sendSingleTransaction(socket), 4000);
+  if ((name === "bob") & first) {
+    setTimeout(
+      () => setInterval(() => sendSingleTransaction(socket), 2000),
+      4000
+    );
+    first = false;
+  } else setInterval(() => sendSingleTransaction(socket), 2000);
   sockets[peerPort] = socket;
 
   // stdin.on('data', (data) => { //on user input

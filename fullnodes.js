@@ -13,49 +13,37 @@ const tree = new MerkleTree([], sha256);
 var Eliptic = EC.ec;
 var ec = new Eliptic('secp256k1');
 const keyPair = ec.genKeyPair();
-// const getKeyPair = () => {
-//   const { privateKey, publicKey } = crypto.generateKeyPairSync("ec", {
-//     namedCurve: "secp256k1",
-//   });
-//   return { privateKey, publicKey };
-// };
+
 const newCoin = new Blockchain();
-console.log(newCoin.miningReward);
-// const { publicKey, privateKey } = getKeyPair();
+// console.log(newCoin.miningReward);
 
 console.log("public : " + keyPair.getPublic("hex"));
 console.log("private : " + keyPair.getPrivate("hex"));
-// console.log("public : " + publicKey.export({ type: "spki", format: "der" }).toString("hex"));
-// console.log("private : " + privateKey.export({ type: "pkcs8", format: "der" }).toString("hex"));
-
-// ( publicKey, privateKey ) = getKeyPair();
-
-// console.log("public : " + publicKey.export({ type: "spki", format: "der" }).toString("hex"));
-// console.log("private : " + privateKey.export({ type: "pkcs8", format: "der" }).toString("hex"));
 
 const pubK = keyPair.getPublic("hex");
 const privK = keyPair.getPrivate("hex");
-// const pk = publicKey.export({ type: "spki", format: "der" }).toString("base64");
 const tx = new Transaction(pubK, "lior", 10);
 
-tx.signTransaction(pubK, privK);
-newCoin.minePendingTransaction(pubK);
+// tx.signTransaction(pubK, privK);
+// newCoin.minePendingTransaction(pubK);
 
-newCoin.addTransaction(tx);
-console.log(newCoin.getBalanceOfAddress(pubK));
-newCoin.minePendingTransactions("2");
-console.log(newCoin.getBalanceOfAddress(pubK));
 
-tree.addLeaves(newCoin.chain.map((block) => block.hash));
-console.log(tree.toString());
 
-console.log(tree.getRoot().toString("hex"));
-const proof = tree.getProof(newCoin.chain[2].hash);
-console.log(newCoin.chain[2].hash);
-console.log(
-  "is valid:",
-  tree.verify(proof, newCoin.chain[2].hash, tree.getRoot().toString("hex"))
-);
+// newCoin.addTransaction(tx);
+// console.log(newCoin.getBalanceOfAddress(pubK));
+// newCoin.minePendingTransactions("2");
+// console.log(newCoin.getBalanceOfAddress(pubK));
+
+// tree.addLeaves(newCoin.chain.map((block) => block.hash));
+// console.log(tree.toString());
+
+// console.log(tree.getRoot().toString("hex"));
+// const proof = tree.getProof(newCoin.chain[2].hash);
+// console.log(newCoin.chain[2].hash);
+// console.log(
+//   "is valid:",
+//   tree.verify(proof, newCoin.chain[2].hash, tree.getRoot().toString("hex"))
+// );
 
 const { stdin, exit, argv } = process;
 const { log } = console;
@@ -107,13 +95,21 @@ topology(myIp, peerIps).on("connection", (socket, peerIp) => {
     log(data.toString("utf8"));
     if (data.includes("fromAddress")) {
       var tempTx = JSON.parse(data.toString());
-      const tx2 = new Transaction(
+      const newTransaction = new Transaction(
         tempTx.fromAddress,
         tempTx.toAddress,
         tempTx.amount,
-        tempTx.signature
+        tempTx.signature,
+        tempTx.timestamp,
+        tempTx.tip
       );
-      log(tx2);
+      newCoin.addTransaction(newTransaction)
+      log(newTransaction)
+      if (newCoin.pendingTransactions.length === 3){
+        newCoin.minePendingTransaction(pubK);
+        log("SEARCH RESULT", newCoin.isTransactionExist(newTransaction.calculateHash()))
+      }
+      // log(newTransaction);
     }
   });
 });
