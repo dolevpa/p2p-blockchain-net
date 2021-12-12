@@ -1,8 +1,5 @@
-import Block from './block.js'
-import { Transaction } from './transaction.cjs'
-
-
-
+import Block from "./block.js";
+import { Transaction } from "./transaction.cjs";
 
 export default class Blockchain {
   constructor() {
@@ -16,7 +13,7 @@ export default class Blockchain {
    * @returns {Block}
    */
   createGenesisBlock() {
-    return new Block(Date.parse('2017-01-01'), [], '0');
+    return new Block(Date.parse("2017-01-01"), [], "0");
   }
 
   /**
@@ -37,13 +34,21 @@ export default class Blockchain {
    * @param {string} miningRewardAddress
    */
   minePendingTransactions(miningRewardAddress) {
-    const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward);
+    const rewardTx = new Transaction(
+      null,
+      miningRewardAddress,
+      this.miningReward
+    );
     this.pendingTransactions.push(rewardTx);
 
-    const block = new Block(Date.now(), this.pendingTransactions, this.getLatestBlock().hash);
+    const block = new Block(
+      Date.now(),
+      this.pendingTransactions,
+      this.getLatestBlock().hash
+    );
     block.mineBlock(this.difficulty);
 
-    console.log('Block successfully mined!');
+    console.log("Block successfully mined!");
     this.chain.push(block);
 
     this.pendingTransactions = [];
@@ -58,25 +63,27 @@ export default class Blockchain {
    */
   addTransaction(transaction) {
     if (!transaction.fromAddress || !transaction.toAddress) {
-      throw new Error('Transaction must include from and to address');
+      throw new Error("Transaction must include from and to address");
     }
 
     // Verify the transactiion
     if (!transaction.isValid(transaction.fromAddress)) {
-      throw new Error('Cannot add invalid transaction to chain');
+      throw new Error("Cannot add invalid transaction to chain");
     }
 
     if (transaction.amount <= 0) {
-      throw new Error('Transaction amount should be higher than 0');
+      throw new Error("Transaction amount should be higher than 0");
     }
 
     // Making sure that the amount sent is not greater than existing balance
-    if (this.getBalanceOfAddress(transaction.fromAddress) < transaction.amount) {
-      throw new Error('Not enough balance');
+    if (
+      this.getBalanceOfAddress(transaction.fromAddress) < transaction.amount
+    ) {
+      throw new Error("Not enough balance");
     }
 
     this.pendingTransactions.push(transaction);
-    console.log('transaction added:');
+    console.log("transaction added:");
   }
 
   /**
@@ -87,20 +94,26 @@ export default class Blockchain {
    */
   getBalanceOfAddress(address) {
     let balance = 100;
-
+    var index = 1;
     for (const block of this.chain) {
       for (const trans of block.transactions) {
         if (trans.fromAddress === address) {
-          balance -= trans.amount;
+          console.log(
+            `balance is  ${balance}, amount is ${trans.amount} tip is ${
+              trans.tip
+            } burn is ${this.chain.indexOf(block)}`
+          );
+          balance -=
+            Number(trans.amount) + trans.tip + this.chain.indexOf(block);
+          console.log("new balance is after reduction", balance);
         }
-
         if (trans.toAddress === address) {
-          balance += trans.amount;
+          balance += Number(trans.amount);
         }
       }
+      index++;
     }
-
-    console.log('getBalanceOfAdrees: %s', balance);
+    console.log("total balance is after ", balance);
     return balance;
   }
 
@@ -122,7 +135,7 @@ export default class Blockchain {
       }
     }
 
-    console.log('get transactions for wallet count: %s', txs.length);
+    console.log("get transactions for wallet count: %s", txs.length);
     return txs;
   }
 
@@ -164,60 +177,40 @@ export default class Blockchain {
     return true;
   }
 
-  sumAllTips(transactions){
-    var sum = 0
-    for(const tran of transactions)
-      sum+=tran.tip
-    return sum
+  sumAllTips(transactions) {
+    var sum = 0;
+    for (const tran of transactions) sum += tran.tip;
+    return sum;
   }
 
   minePendingTransaction(miningRewardAddress) {
-    
-
-    const totalTips = this.sumAllTips(this.pendingTransactions)
-    console.log("TOTAL TIPS ARE:    ", totalTips)
-    const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward + totalTips);
+    const totalTips = this.sumAllTips(this.pendingTransactions);
+    console.log("TOTAL TIPS ARE:    ", totalTips);
+    const rewardTx = new Transaction(
+      null,
+      miningRewardAddress,
+      this.miningReward + totalTips
+    );
     this.pendingTransactions.push(rewardTx);
-    let block = new Block(Date.now(), this.pendingTransactions, this.getLatestBlock().hash);
+    let block = new Block(
+      Date.now(),
+      this.pendingTransactions,
+      this.getLatestBlock().hash
+    );
     block.mineBlock(this.difficulty);
-    console.log('block succefully mined');
+    console.log("block succefully mined");
     this.chain.push(block);
     //this.pendingTransactions = [new Transaction(null, miningRewardAddress, this.miningReward)];
-    this.getBalanceOfAddress(this.pendingTransactions[0].fromAddress)
-    this.pendingTransactions = []
-   
-    
-    
+    this.getBalanceOfAddress(this.pendingTransactions[0].fromAddress);
+    this.pendingTransactions = [];
   }
-  
 
-  getBalanceOfAddress(address) {
-    let balance = 100;
-    var index = 1
-    for (const block of this.chain) {
-      for (const trans of block.transactions) {
-        if (trans.fromAddress === address) {
-          console.log(`balance is  ${balance}, amount is ${trans.amount} tip is ${trans.tip} burn is ${this.chain.indexOf(block)}`)
-          balance -= Number(trans.amount) + trans.tip + this.chain.indexOf(block);
-          console.log("new balance is ", balance)
-          
-        }
-        if (trans.toAddress === address) {
-          balance += trans.amount;
-        }
-      }
-      index++
-    }
-    return balance;
-  }
   isTransactionExist(hash) {
-    for(const block of this.chain){
-      const proof = block.tree.getProof(hash)
-      let verified = block.tree.verify(proof, hash, block.tree.getHexRoot())
-      if (verified)
-        return true
+    for (const block of this.chain) {
+      const proof = block.tree.getProof(hash);
+      let verified = block.tree.verify(proof, hash, block.tree.getHexRoot());
+      if (verified) return true;
     }
-    return false
+    return false;
   }
 }
-
