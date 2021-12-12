@@ -1,6 +1,7 @@
 // import * as crypto from 'crypto'
 const EC = require('elliptic').ec
 const crypto = require('crypto')
+const sha256 = require("crypto-js/sha256.js")
 // const {
 //     generateKeyPairSync,
 //     createSign,
@@ -32,16 +33,16 @@ const crypto = require('crypto')
      * @returns {string}
      */
     calculateHash() {
-      return crypto.createHash('sha256').update(this.fromAddress + this.toAddress + this.amount + this.timestamp).digest('hex');
+      return sha256(this.fromAddress + this.toAddress + this.amount + this.timestamp).toString();
     }
-    signTransaction(publicKey, privateKey) {
+    signTransaction(key) {
       // You can only send a transaction from the wallet that is linked to your
       // key. So here we check if the fromAddress matches your publicKey
-      if (publicKey !== this.fromAddress) {
+      if (key.getPublic("hex") !== this.fromAddress) {
         throw new Error('You cannot sign transactions for other wallets!');
       }
   
-      const key = ec.keyFromPrivate(privateKey);
+      // const key = ec.keyFromPrivate(privateKey);
       // Calculate the hash of this transaction, sign it with the key
       // and store it inside the transaction obect
       // const sign = crypto.createSign('SHA256');
