@@ -5,11 +5,6 @@ const ec = new EC('secp256k1')
   
   
  class Transaction {
-    /**
-     * @param {string} fromAddress
-     * @param {string} toAddress
-     * @param {number} amount
-     */
     constructor(fromAddress, toAddress, amount, signature, timestamp, tip) {
       this.fromAddress = fromAddress;
       this.toAddress = toAddress;
@@ -33,7 +28,6 @@ const ec = new EC('secp256k1')
       if (key.getPublic("hex") !== this.fromAddress) {
         throw new Error('You cannot sign transactions for other wallets!');
       }
-      console.log("calculateHash before signing ", this.calculateHash())
       const hashTx = this.calculateHash();
       const sign = key.sign(hashTx).toDER("hex");
       this.signature = sign;
@@ -55,13 +49,8 @@ const ec = new EC('secp256k1')
       if (!this.signature || this.signature.length === 0) {
         throw new Error('No signature in this transaction');
       }
-      console.log("public key before keyFromPublic: %s", publicKey)
       var key = ec.keyFromPublic(publicKey, 'hex');
-      console.log("after key ", key.getPublic('hex'))
-      console.log("calculateHash before verify ", this.calculateHash())
       var isVerified = key.verify(this.calculateHash(), this.signature)
-      console.log("after isVerified ", isVerified)
-      
       return isVerified
     }
   }
