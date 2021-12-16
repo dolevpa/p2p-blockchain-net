@@ -20,16 +20,17 @@ npm install
 
 main path:
 
-- ````
+- ```
       node fullnodes.js 4001 4002 4003
-      ```
-  inside p2p:
-  ````
+  ```
+  
+get inside p2p:
 
 ```
 cd p2p
 ```
 
+and run:
 - ```
   node wallet.js bob 4002 4001 4003
   ```
