@@ -38,11 +38,8 @@ and run:
   node wallet.js alice 4003 4001 4002
   ```
 
-## Blockchain
-
-- a
-- b
-- c
+## Model 
+### Blockchain
 
 ```JavaScript
 class Blockchain {
@@ -53,10 +50,11 @@ class Blockchain {
     this.miningReward = 10;
   }
 ```
+Defines a BlockChain with list of blocks, mine difficulty, pending transactions
+and mining reward
 
 
-## Block
-
+### Block
 
 ```JavaScript
 class Block {
@@ -69,12 +67,12 @@ class Block {
         this.hash = this.calculateHash();
     }
 ```
-Each Block has the hash of the previous block hash, timestamp, nonce, transactions, **a MerkleTree that holds the transactions headers
+Each Block contains the hash of the previous block, timestamp, nonce, transactions, **a MerkleTree that holds the transactions headers
 to futurly improve access for finding an existing transaction.**
 
 
 
-## Transaction
+### Transaction
 
 ```JavaScript
  class Transaction {
@@ -88,14 +86,13 @@ to futurly improve access for finding an existing transaction.**
     }
 ```
 
-## Flow
+## Main flow
 
-### Fullnodes
+### Fullnodes:
 ```JavaScript
 var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => { // initiate a connection with peers list when  
   const peerPort = extractPortFromIp(peerIp);                          // someone connected.
   log("connected to peer - ", peerPort); 
-  sockets[peerPort] = socket;
 
   socket.on("data", (data) => { // Listens to data that goes through the network.
     if (data.includes("fromAddress")) { // check if data is a transaction.
@@ -108,12 +105,76 @@ var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => { // initia
         tempTx.timestamp,
         tempTx.tip
       );
-      newCoin.addTransaction(newTransaction) // validate transaction signature and add it to chain.
-      if (newCoin.pendingTransactions.length === 3) { // check if chain is ready to mine block
-        newCoin.minePendingTransaction(pubK); // mine block
+      newCoin.addTransaction(newTransaction) // validate transaction signature, sender balance and add it to chain if valid.
+      if (newCoin.pendingTransactions.length === 3) { // check if chain is ready to mine block.
+        newCoin.minePendingTransaction(pubK); // mine block. 
       }
     }
+
+        if (data.includes("balance") && newCoin.pendingTransactions.length === 0) { // check if data is balance request.
+      log("pending : ", newCoin.pendingTransactions)                                // print all kind of balances.
+      log("bob has ", newCoin.getBalanceOfAddress(pkMap.get('bob')))
+      log("alice has ", newCoin.getBalanceOfAddress(pkMap.get('alice')))
+      log("miner has ", newCoin.getBalanceOfAddress(pubK))
+      log("Total mined coins: ", newCoin.getTotalMinedCoins())
+      log("Total burned coins: ", newCoin.getTotalBurnedCoins())
+      log("Total coins in network: ", newCoin.getCoinsInNetwork())
+      exit(0)
+    }
+    if (data.includes("check")){ // check if data is check request.
+      log(data)
+      var hashToCheck = String(data).split(' ')
+      var flag = newCoin.isTransactionExist(hashToCheck[1]) // validate transaction in block using merkle tree.
+      socket.write(`${flag}`) // send back result.
+    }
+  });
+});
 ```
+
+### Wallet
+
+```JavaScript
+var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
+    const peerPort = extractPortFromIp(peerIp);
+    log("connected to peer - ", peerPort);
+    var hashToCheck;
+    const sendSingleTransaction = (socket) => {
+        if (transactions.transactions[index] !== undefined) { // make sure file is not empty
+            if (transactions.transactions[index].fromAddress === name) { // make sure to send only self transactions
+                let key = ec.keyFromPrivate(prMap.get(name), "hex");
+                const tx = new Transaction( // creates new transaction object
+                    pkMap.get(name),
+                    pkMap.get(name === "alice" ? "bob" : "alice"),
+                    transactions.transactions[index].amount,
+                    undefined,
+                    undefined,
+                    transactions.transactions[index].tip ? 1 : 0
+                );
+                tx.signTransaction(key);
+                var buf = Buffer.from(JSON.stringify(tx));
+                console.log(tx);
+                hashToCheck = tx.calculateHash(); // collecting hash for future check.
+                socket.write(buf); // sending signed transaction.
+            }
+            index++;
+            
+        } else { // finsh sending transactions
+            if (name === "bob") { // only bob send
+                setTimeout(() => socket.write(`check ${hashToCheck}`), 3000) 
+                setTimeout(() => socket.write("balance"), 6000)
+            }
+        }
+    };
+    if ((name === "bob") && first) {  // setting timout for bob to handle send time
+        setTimeout(() => setInterval(() => sendSingleTransaction(socket), 3000), 12200);
+        first = false;
+    } else
+        setInterval(() => sendSingleTransaction(socket), 3000);
+
+    socket.on('data', data => log(data.toString('utf8'))) // print data received
+});
+```
+
 
 
 ### _Interesting Functions:_
@@ -127,21 +188,21 @@ transaction is properly signed.
 ```JavaScript
     minePendingTransaction(miningRewardAddress) {
     const totalTips = this.sumAllTips(this.pendingTransactions);
-    const rewardTx = new Transaction( // create a new reward transaction with reward and tip
+    const rewardTx = new Transaction( // create a new reward transaction with reward and tip.
       null,
       miningRewardAddress,
       this.miningReward + totalTips, undefined, undefined, 0
     );
-    this.pendingTransactions.push(rewardTx); // add reward transaction to pending list
+    this.pendingTransactions.push(rewardTx); // add reward transaction to pending list.
     let block = new Block(
       Date.now(),
       this.pendingTransactions,
       this.getLatestBlock().hash
     );
-    block.mineBlock(this.difficulty);  // mine the prepeard block with chain difficulty
+    block.mineBlock(this.difficulty);  // mine the prepeard block with chain difficulty.
     console.log("block successfully mined");
     this.chain.push(block);
-    this.pendingTransactions = []; //clear pending transaction list
+    this.pendingTransactions = []; //clear pending transaction list.
   }
 ```
 
@@ -157,7 +218,7 @@ addTransaction(transaction) {
       throw new Error("Transaction must include from and to address");
     }
 
-    // Verify the transactiion
+    // verify the transactiion.
     if (!transaction.isValid(transaction.fromAddress)) {
       throw new Error("Cannot add invalid transaction to chain");
     }
@@ -166,7 +227,7 @@ addTransaction(transaction) {
       throw new Error("Transaction amount should be higher than 0");
     }
 
-    // Making sure that the amount sent is not greater than existing balance
+    // Making sure that the amount sent is not greater than existing balance.
     if (
       this.getBalanceOfAddress(transaction.fromAddress) < transaction.amount
     ) {
@@ -189,12 +250,12 @@ getBalanceOfAddress(address) {
     let balance = 100; //every wallet starts with 100 coins
     for (const block of this.chain) {
       for (const trans of block.transactions) {
-        if (trans.fromAddress === address) {   // checks for every transaction in chain
-          balance -= Number(trans.amount) + trans.tip + this.chain.indexOf(block); //reduce amount sent include tip and burn
+        if (trans.fromAddress === address) {   // checks for every transaction in chain.
+          balance -= Number(trans.amount) + trans.tip + this.chain.indexOf(block); //reduce amount sent include tip and burn.
           console.log("new balance is after reduction", balance);
         }
         if (trans.toAddress === address) {
-          balance += Number(trans.amount); // add the amount sent from others
+          balance += Number(trans.amount); // add the amount sent from others.
         }
       }
     }
@@ -239,6 +300,7 @@ signTransaction(keyPair) {
 Validate signer is signing for himself and then calculate transaction hash and sign
 it with his private key.
 
+- **Is Transaction Valid (Transaction)**
 ```JavaScript
 
     isValid(publicKey) {
@@ -257,3 +319,15 @@ it with his private key.
 ```
 Checks if the signature is valid (transaction has not been tampered with).
 It uses the _fromAddress_ as the public key.
+
+- Is Transaction Exist
+```JavaScript
+  isTransactionExist(hash) {
+    for (const block of this.chain) { 
+      const proof = block.tree.getProof(hash); //get proof with transaction hash (leaf)
+      let isExist = block.tree.verify(proof, hash, block.tree.getHexRoot()); //verify existance with proof
+      if (isExist) return true;
+    }
+    return false;
+  }
+```

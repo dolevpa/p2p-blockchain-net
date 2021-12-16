@@ -39,9 +39,6 @@ const peerIps = getPeerIps(peers);
 let index = 0;
 const ec = new EC("secp256k1");
 
-var otherPublicKey;
-let stageZero = false;
-
 //connect to peers
 var first = true;
 var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
@@ -84,33 +81,6 @@ var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
     } else
         setInterval(() => sendSingleTransaction(socket), 3000);
 
-
-
-
-
-
-    // stdin.on('data', (data) => { //on user input
-    //     const message = data.toString().trim()
-    //     if (message === 'exit') { //on exit
-    //         log('Bye bye')
-    //         exit(0);
-    //     } else  //broadcast message to everyone
-    //         socket.write(formatMessage(message))
-    // });
-
-
-    // const receiverPeer = extractReceiverPeer(message)
-    // if (sockets[receiverPeer]) { //message to specific peer
-    //     if (peerPort === receiverPeer) { //write only once
-    //         sockets[receiverPeer].write(formatMessage(extractMessageToSpecificPeer(message)))
-
-    //     }
-    // } else { //broadcast message to everyone
-    //     socket.write(formatMessage(message))
-
-    // }
-    // })
-    //print data when received
     socket.on('data', data => log(data.toString('utf8')))
 });
 
@@ -131,24 +101,4 @@ function toLocalIp(port) {
 //['4000', '4001'] -> ['127.0.0.1:4000', '127.0.0.1:4001']
 function getPeerIps(peers) {
     return peers.map((peer) => toLocalIp(peer));
-}
-
-//'hello' -> 'myPort:hello'
-function formatMessage(message) {
-    return `${me}>${message}`;
-}
-
-//'127.0.0.1:4000' -> '4000'
-function extractPortFromIp(peer) {
-    return peer.toString().slice(peer.length - 4, peer.length);
-}
-
-//'4000>hello' -> '4000'
-function extractReceiverPeer(message) {
-    return message.slice(0, 4);
-}
-
-//'4000>hello' -> 'hello'
-function extractMessageToSpecificPeer(message) {
-    return message.slice(5, message.length);
 }

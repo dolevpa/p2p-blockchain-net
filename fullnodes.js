@@ -1,4 +1,3 @@
-// const topology = require('fully-connected-topology')
 import topology from "fully-connected-topology";
 import Blockchain from "./blockchain.js";
 import { Transaction } from "./transaction.cjs";
@@ -6,44 +5,18 @@ import * as crypto from "crypto";
 import EC from "elliptic";
 import { MerkleTree } from "merkletreejs";
 import sha256 from "crypto-js/sha256.js";
-// const EC = require('elliptic').ec
 const hash = crypto.createHash("sha256");
 
 const tree = new MerkleTree([], sha256);
 var Eliptic = EC.ec;
 var ec = new Eliptic('secp256k1');
 const keyPair = ec.genKeyPair();
-
 const newCoin = new Blockchain();
-// console.log(newCoin.miningReward);
 
 console.log("public : " + keyPair.getPublic("hex"));
 console.log("private : " + keyPair.getPrivate("hex"));
 
 const pubK = keyPair.getPublic("hex");
-const privK = keyPair.getPrivate("hex");
-const tx = new Transaction(pubK, "lior", 10);
-
-// tx.signTransaction(pubK, privK);
-// newCoin.minePendingTransaction(pubK);
-
-
-
-// newCoin.addTransaction(tx);
-// console.log(newCoin.getBalanceOfAddress(pubK));
-// newCoin.minePendingTransactions("2");
-// console.log(newCoin.getBalanceOfAddress(pubK));
-
-// tree.addLeaves(newCoin.chain.map((block) => block.hash));
-// console.log(tree.toString());
-
-// console.log(tree.getRoot().toString("hex"));
-// const proof = tree.getProof(newCoin.chain[2].hash);
-// console.log(newCoin.chain[2].hash);
-// console.log(
-//   "is valid:",
-//   tree.verify(proof, newCoin.chain[2].hash, tree.getRoot().toString("hex"))
-// );
 
 const { stdin, exit, argv } = process;
 const { log } = console;
@@ -85,36 +58,8 @@ var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
   log("connected to peer - ", peerPort);
   sockets[peerPort] = socket;
 
-  // stdin.on("data", (data) => {
-  //   //on user input
-  //   const message = data.toString().trim();
-  //   if (message === "exit") {
-  //     //on exit
-  //     log("Bye bye");
-  //     exit(0);
-  //   }
-
-  //   const receiverPeer = extractReceiverPeer(message);
-  //   console.log(message);
-  //   if (sockets[receiverPeer]) {
-  //     //message to specific peer
-  //     if (peerPort === receiverPeer) {
-  //       //write only once
-  //       sockets[receiverPeer].write(
-  //         formatMessage(extractMessageToSpecificPeer(message))
-  //       );
-  //     }
-  //   } else {
-  //     //broadcast message to everyone
-  //     socket.write(formatMessage(message));
-  //   }
-  // });
-
-  //print data when received
-
-
   socket.on("data", (data) => {
-    log(data.toString("utf8"));
+
     if (data.includes("fromAddress")) {
       var tempTx = JSON.parse(data.toString());
       const newTransaction = new Transaction(
@@ -125,6 +70,7 @@ var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
         tempTx.timestamp,
         tempTx.tip
       );
+      log(newTransaction);
       newCoin.addTransaction(newTransaction)
       if (newCoin.pendingTransactions.length === 3) {
         newCoin.minePendingTransaction(pubK);
@@ -140,11 +86,10 @@ var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
       log("Total coins in network: ", newCoin.getCoinsInNetwork())
       exit(0)
     }
-    if (data.includes("check")){
-      log(data)
+    if (data.includes("check")){ // check if data is check request.
       var hashToCheck = String(data).split(' ')
-      var flag = newCoin.isTransactionExist(hashToCheck[1])
-      socket.write(`${flag}`)
+      var flag = newCoin.isTransactionExist(hashToCheck[1]) // validate transaction in block using merkle tree.
+      socket.write(`isTransactionExist result with the hash: ${hashToCheck[1]} is ${flag}` ) // send back result.
     }
   });
 });
@@ -165,24 +110,4 @@ function toLocalIp(port) {
 //['4000', '4001'] -> ['127.0.0.1:4000', '127.0.0.1:4001']
 function getPeerIps(peers) {
   return peers.map((peer) => toLocalIp(peer));
-}
-
-//'hello' -> 'myPort:hello'
-function formatMessage(message) {
-  return `${me}>${message}`;
-}
-
-//'127.0.0.1:4000' -> '4000'
-function extractPortFromIp(peer) {
-  return peer.toString().slice(peer.length - 4, peer.length);
-}
-
-//'4000>hello' -> '4000'
-function extractReceiverPeer(message) {
-  return message.slice(0, 4);
-}
-
-//'4000>hello' -> 'hello'
-function extractMessageToSpecificPeer(message) {
-  return message.slice(5, message.length);
 }
