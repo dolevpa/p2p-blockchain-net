@@ -55,7 +55,7 @@ export default class Blockchain {
     }
 
     this.pendingTransactions.push(transaction);
-    console.log("transaction added to pending list!");
+    console.log(`\ntransaction ${transaction.calculateHash()} added to pending list!\n`);
   }
 
   /**
@@ -70,8 +70,7 @@ export default class Blockchain {
       for (const trans of block.transactions) {
         if (trans.fromAddress === address) {
           console.log(
-            `balance is  ${balance}, amount is ${trans.amount} tip is ${
-              trans.tip
+            `balance is  ${balance}, amount is ${trans.amount} tip is ${trans.tip
             } burn is ${this.chain.indexOf(block)}`
           );
           balance -= Number(trans.amount) + trans.tip + this.chain.indexOf(block);
@@ -158,7 +157,7 @@ export default class Blockchain {
     const rewardTx = new Transaction(
       null,
       miningRewardAddress,
-      this.miningReward + totalTips,undefined, undefined, 0
+      this.miningReward + totalTips, undefined, undefined, 0
     );
     this.pendingTransactions.push(rewardTx);
     let block = new Block(
@@ -184,19 +183,18 @@ export default class Blockchain {
   getTotalMinedCoins() {
     var sum = 0;
     for (const block of this.chain) {
-      for (const trans of block.transactions){
+      for (const trans of block.transactions) {
         console.log(`amount is : ${Number(trans.amount)} , tip is : ${trans.tip}`)
         sum += Number(trans.amount);
       }
     }
-    // console.log("Total coins mined in the network's blocks: ", sum);
     return sum;
   }
   getCoinsInNetwork() {
     var sum = 0;
     var users = new Set();
     for (const block of this.chain) {
-      for (const trans of block.transactions){
+      for (const trans of block.transactions) {
         users.add(trans.fromAddress)
         users.add(trans.toAddress)
       }
@@ -209,7 +207,7 @@ export default class Blockchain {
     // console.log("size is ", users.size)
     // console.log("user : ", users)
     sum += users.size * 100 //users amount * starting balance for each user
-    
+
     // console.log("Total coins in the network is: ", sum);
     return sum;
   }
@@ -217,7 +215,7 @@ export default class Blockchain {
   getTotalBurnedCoins() {
     var sum = 0;
     for (const block of this.chain) {
-      sum += this.chain.indexOf(block)*3 
+      sum += this.chain.indexOf(block) * 3
     }
     // console.log("Total coins burned in the network: ", sum);
     return sum;

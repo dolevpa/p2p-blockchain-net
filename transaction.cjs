@@ -51,6 +51,8 @@ const ec = new EC('secp256k1')
       }
       var key = ec.keyFromPublic(publicKey, 'hex');
       var isVerified = key.verify(this.calculateHash(), this.signature)
+      console.log(`signature ${this.signature} verification result is : ${isVerified}`)
+
       return isVerified
     }
   }

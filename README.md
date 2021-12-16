@@ -122,10 +122,10 @@ var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => { // initia
       exit(0)
     }
     if (data.includes("check")){ // check if data is check request.
-      log(data)
       var hashToCheck = String(data).split(' ')
       var flag = newCoin.isTransactionExist(hashToCheck[1]) // validate transaction in block using merkle tree.
-      socket.write(`${flag}`) // send back result.
+      socket.write(`isTransactionExist result with the hash: ${hashToCheck[1]} is ${flag}` ) // send back result.
+
     }
   });
 });
@@ -320,7 +320,7 @@ it with his private key.
 Checks if the signature is valid (transaction has not been tampered with).
 It uses the _fromAddress_ as the public key.
 
-- Is Transaction Exist
+- **Is Transaction Exist (BlockChain)** 
 ```JavaScript
   isTransactionExist(hash) {
     for (const block of this.chain) { 
