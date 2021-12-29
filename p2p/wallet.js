@@ -38,13 +38,14 @@ const myIp = toLocalIp(me);
 const peerIps = getPeerIps(peers);
 let index = 0;
 const ec = new EC("secp256k1");
+var hashToCheck;
 
 //connect to peers
 var first = true;
 var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
     const peerPort = extractPortFromIp(peerIp);
     log("connected to peer - ", peerPort);
-    var hashToCheck;
+    
     const sendSingleTransaction = (socket) => {
         if (transactions.transactions[index] !== undefined) {
             if (transactions.transactions[index].fromAddress === name) {
@@ -76,7 +77,7 @@ var t = topology(myIp, peerIps).on("connection", (socket, peerIp) => {
     sockets[peerPort] = socket;
 
     if ((name === "bob") && first) {
-        setTimeout(() => setInterval(() => sendSingleTransaction(socket), 3000), 12200);
+        setTimeout(() => setInterval(() => sendSingleTransaction(socket), 3000), 12500);
         first = false;
     } else
         setInterval(() => sendSingleTransaction(socket), 3000);
@@ -101,4 +102,8 @@ function toLocalIp(port) {
 //['4000', '4001'] -> ['127.0.0.1:4000', '127.0.0.1:4001']
 function getPeerIps(peers) {
     return peers.map((peer) => toLocalIp(peer));
+}
+//'127.0.0.1:4000' -> '4000'
+function extractPortFromIp(peer) {
+    return peer.toString().slice(peer.length - 4, peer.length);
 }

@@ -111,3 +111,7 @@ function toLocalIp(port) {
 function getPeerIps(peers) {
   return peers.map((peer) => toLocalIp(peer));
 }
+//'127.0.0.1:4000' -> '4000'
+function extractPortFromIp(peer) {
+  return peer.toString().slice(peer.length - 4, peer.length);
+}
